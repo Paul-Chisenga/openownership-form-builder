@@ -10,7 +10,8 @@
     "seed": "tsx seeder.ts",
     "seed:fresh": "yarn migrate:fresh && yarn seed",
     "migrate": "prisma db push",
-    "migrate:fresh": "prisma db push --force-reset"
+    "migrate:fresh": "prisma db push --force-reset",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
