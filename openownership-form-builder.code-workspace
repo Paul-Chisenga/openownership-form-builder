@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+    {
+      "path": "../Buna Africa/buna-fishhealth-v2",
+    },
+  ],
+  "settings": {
+    "prisma.pinToPrisma6": true,
+  },
+}

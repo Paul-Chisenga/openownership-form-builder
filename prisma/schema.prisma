@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum RuleType {
+  REQUIRED
+  MIN
+  MAX
+}
+
+model ValidationRule {
+  id             String                          @id @default(auto()) @map("_id") @db.ObjectId
+  name           RuleType                        @unique
+  inputDataTypes ValidationRuleInInputDataType[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PrimitiveType {
+  STRING
+  NUMBER
+  EMAIL
+}
+
+model InputDataType {
+  id     String        @id @default(auto()) @map("_id") @db.ObjectId
+  name   PrimitiveType @unique // Enforces strict enum values and prevents duplicates
+  fields FormField[]
+
+  // Relate allowed rules directly to the datatype in the DB
+  allowedRules ValidationRuleInInputDataType[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ValidationRuleInInputDataType {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  inputDataTypeId  String         @db.ObjectId
+  inputDataType    InputDataType  @relation(fields: [inputDataTypeId], references: [id])
+  validationRuleId String         @db.ObjectId
+  validationRule   ValidationRule @relation(fields: [validationRuleId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([inputDataTypeId, validationRuleId]) // Must be unique to prevent duplicates
+}
+
+model FormLayout {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  fields      FormField[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions FormSubmission[]
+}
+
+model FormField {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  formLayoutId    String        @db.ObjectId
+  formLayout      FormLayout    @relation(fields: [formLayoutId], references: [id])
+  inputDataTypeId String        @db.ObjectId
+  inputDataType   InputDataType @relation(fields: [inputDataTypeId], references: [id])
+  name            String // eg. firstName
+  label           String // eg. First Name
+
+  /**
+   * {
+   * "REQUIRED": { "value": true, "message": "First name is required" },
+   * "MIN": { "value": 2, "message": "Too short" },
+   * "MAX": { "value": 255, "message": "Too long" }
+   * }
+   */
+  validationRules Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissionAnswers FormAnswer[]
+
+  @@unique([formLayoutId, name])
+}
+
+model FormSubmission {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  formLayoutId String     @db.ObjectId
+  formLayout   FormLayout @relation(fields: [formLayoutId], references: [id])
+
+  // Snapshot form layout
+  layoutName        String
+  layoutDescription String?
+
+  answers FormAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FormAnswer {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  formSubmissionId String         @db.ObjectId
+  formSubmission   FormSubmission @relation(fields: [formSubmissionId], references: [id])
+  formFieldId      String?        @db.ObjectId
+  formField        FormField?     @relation(fields: [formFieldId], references: [id])
+
+  // Field Snapshot
+  fieldName  String
+  fieldLabel String
+  fieldType  PrimitiveType
+  fieldRules Json
+
+  // submitted value
+  submittedValue String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
