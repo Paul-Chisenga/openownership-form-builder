@@ -83,6 +83,12 @@ DATABASE_URL="mongodb+srv://open-ownership:Test%40db4Openownership@cluster0.tk0x
 npm install
 ```
 
+### Generate Prisma client types
+
+```bash
+npx prisma generate
+```
+
 ### Run development mode
 
 ```bash
