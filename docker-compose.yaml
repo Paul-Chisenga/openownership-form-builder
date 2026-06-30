@@ -1,0 +1,23 @@
+services:
+  openownership:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    stdin_open: true
+    tty: true
+    develop:
+      watch:
+        # Sync source files instantly without rebuilding the whole image
+        - action: sync
+          path: ./app
+          target: /app/app
+        # Only rebuild the image if dependencies change
+        - action: rebuild
+          path: ./package.json
+        # Rebuild if database schema changes (to trigger prisma generate)
+        - action: rebuild
+          path: ./prisma/schema.prisma
