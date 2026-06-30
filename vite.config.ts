@@ -3,6 +3,9 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  ssr: {
+    external: ["./app/generated/prisma", "@prisma/client"],
+  },
   environments: {
     ssr: {
       build: {
